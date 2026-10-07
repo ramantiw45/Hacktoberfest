@@ -23,7 +23,7 @@ MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "hf-inference")
 # Free hosted lanes for open-weight chat (no GPU needed). Set ONE key to go live.
 # Chain order: Groq -> Google AI Studio (Gemma) -> Hugging Face -> mock.
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")  # Meta Llama 3.3 70B, free tier
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")  # OpenAI GPT-OSS 20B open-weight, free tier
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemma-3-4b-it")  # Google Gemma 3 4B, free tier
 
@@ -95,8 +95,8 @@ Keep screen time minimal, encourage going outside."""
             )
             return (
                 text,
-                f"{GROQ_MODEL} (open-weight Llama via Groq free tier)",
-                "https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct",
+                f"{GROQ_MODEL} (open-weight GPT-OSS via Groq free tier)",
+                "https://huggingface.co/openai/gpt-oss-20b",
             )
         except Exception as e:
             errors.append(f"Groq: {e}")
@@ -333,5 +333,6 @@ def plan(
         "model": served_by,
         "model_source": source_url,
         "weather_summary": summary,
+        "weather_error": weather.get("error", ""),
         "generated_at": datetime.utcnow().isoformat() + "Z",
     }
