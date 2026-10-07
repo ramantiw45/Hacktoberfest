@@ -10,3 +10,9 @@ services:
         sync: false
       - key: MODEL_ID
         value: Qwen/Qwen2.5-7B-Instruct
+      - key: MODEL_PROVIDER
+        value: hf-inference
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

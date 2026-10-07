@@ -17,6 +17,15 @@ load_dotenv()
 
 MODEL_ID = os.getenv("MODEL_ID", "Qwen/Qwen2.5-7B-Instruct")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
+# Inference provider routing. "hf-inference" = Hugging Face's own free serverless
+# lane (no credits needed, rate-limited). "featherless-ai" etc. need paid credits.
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "hf-inference")
+# Free hosted lanes for open-weight chat (no GPU needed). Set ONE key to go live.
+# Chain order: Groq -> Google AI Studio (Gemma) -> Hugging Face -> mock.
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")  # Meta Llama 3.1 8B, free tier
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemma-3-4b-it")  # Google Gemma 3 4B, free tier
 
 app = FastAPI(title="Foliage Walk Planner")
 
@@ -29,15 +38,33 @@ def get_weather(lat: float, lon: float) -> dict:
         "&timezone=auto&forecast_days=2"
     )
     try:
-        r = httpx.get(url, timeout=15)
+        r = httpx.get(url, timeout=15, headers={"User-Agent": "foliage-walk-planner/1.0"})
         r.raise_for_status()
         return r.json()
     except Exception as e:
         return {"error": str(e)}
 
 
-def llm_plan(location: str, lat: float, lon: float, weather: dict, minutes: int) -> str:
-    daily = weather.get("daily", {})
+def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) -> str:
+    """One POST to any OpenAI-compatible chat endpoint. Raises on failure."""
+    r = httpx.post(
+        base_url.rstrip("/") + "/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 300,
+            "temperature": 0.7,
+        },
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip()
+
+
+def llm_plan(location: str, lat: float, lon: float, weather: dict, minutes: int):
+    """Returns (plan_text, served_by, source_url), trying free lanes in order."""
+    daily = weather.get("daily", {}) or {}
     tmax = (daily.get("temperature_2m_max") or ["?"])[0]
     tmin = (daily.get("temperature_2m_min") or ["?"])[0]
     rain = (daily.get("precipitation_probability_max") or ["?"])[0]
@@ -55,26 +82,68 @@ Reply in 5 short lines:
 5. One-sentence why this beats scrolling.
 Keep screen time minimal, encourage going outside."""
 
-    if not HF_TOKEN:
+    errors: list[str] = []
+    if GROQ_API_KEY:
+        try:
+            text = _chat_openai_compat(
+                "https://api.groq.com/openai/v1", GROQ_API_KEY, GROQ_MODEL, prompt
+            )
+            return (
+                text,
+                f"{GROQ_MODEL} (open-weight Llama via Groq free tier)",
+                "https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct",
+            )
+        except Exception as e:
+            errors.append(f"Groq: {e}")
+    if GEMINI_API_KEY:
+        try:
+            text = _chat_openai_compat(
+                "https://generativelanguage.googleapis.com/v1beta/openai",
+                GEMINI_API_KEY,
+                GEMINI_MODEL,
+                prompt,
+            )
+            return (
+                text,
+                f"{GEMINI_MODEL} (open-weight Gemma via AI Studio free tier)",
+                "https://ai.google.dev/gemma",
+            )
+        except Exception as e:
+            errors.append(f"Google AI Studio: {e}")
+    if HF_TOKEN:
+        try:
+            client = InferenceClient(provider=MODEL_PROVIDER, token=HF_TOKEN)
+            out = client.chat_completion(
+                model=MODEL_ID,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=300,
+                temperature=0.7,
+            )
+            return (
+                out.choices[0].message.content.strip(),
+                f"{MODEL_ID} (open-weight via {MODEL_PROVIDER})",
+                f"https://huggingface.co/{MODEL_ID}",
+            )
+        except Exception as e:
+            errors.append(f"Hugging Face: {e}")
+    if not errors:
         return (
-            f"Mock plan (add HF_TOKEN for live open-weight output, model={MODEL_ID}):\n"
+            f"Mock plan (set GROQ_API_KEY for live open-weight output, {GROQ_MODEL}):\n"
             f"1. Go 9-11am, {tmax}C, rain {rain}%\n"
             "2. 2.5km park loop near you — see map pin\n"
             "3. Look for maples turning edge-first\n"
             "4. Bring water + light layer\n"
-            "5. Two hours outside beats two hours scrolling."
+            "5. Two hours outside beats two hours scrolling.",
+            "mock (no model key configured)",
+            "https://github.com/ramantiw45/Hacktoberfest",
         )
-    try:
-        client = InferenceClient(token=HF_TOKEN)
-        out = client.chat_completion(
-            model=MODEL_ID,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.7,
-        )
-        return out.choices[0].message.content.strip()
-    except Exception as e:
-        return f"Model call failed ({MODEL_ID}): {e}\nFallback: go 9-11am for {minutes} min, bring water."
+    detail = "\n".join(f"- {x[:220]}" for x in errors)
+    return (
+        f"Live models briefly unavailable, tried:\n{detail}\n"
+        f"Fallback: go 9-11am for {minutes} min, bring water.",
+        "unavailable (all lanes failed)",
+        "https://github.com/ramantiw45/Hacktoberfest",
+    )
 
 
 INDEX_HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8"/>
@@ -250,13 +319,14 @@ def plan(
     minutes: int = Query(120, ge=30, le=300),
 ):
     weather = get_weather(lat, lon)
-    text = llm_plan(location, lat, lon, weather, minutes)
-    daily = weather.get("daily", {})
-    summary = f"{daily.get('temperature_2m_max',[ '?'])[0]}C max"
+    text, served_by, source_url = llm_plan(location, lat, lon, weather, minutes)
+    daily = weather.get("daily", {}) or {}
+    tmax = (daily.get("temperature_2m_max") or ["?"])[0]
+    summary = f"{tmax}C max" if tmax != "?" else "weather unavailable"
     return {
         "plan": text,
-        "model": MODEL_ID,
-        "model_source": f"https://huggingface.co/{MODEL_ID}",
+        "model": served_by,
+        "model_source": source_url,
         "weather_summary": summary,
         "generated_at": datetime.utcnow().isoformat() + "Z",
     }
