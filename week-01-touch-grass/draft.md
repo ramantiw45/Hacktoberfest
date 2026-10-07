@@ -2,48 +2,49 @@
 
 *This is a submission for the [Hacktoberfest Open-Source AI Challenge Week 1: Touch Grass](https://dev.to/challenges/hacktoberfest-week1-2026-10-05)*
 
-TL;DR — 1 input → 1 foliage walk + map. Open-weight Qwen via HF Inference. Live: <render-url> | Repo: <github-url>
+TL;DR — 1 input → 1 foliage walk + map in under a minute, then go outside. Open-weight GPT-OSS 20B via Groq free tier. Live: https://foliage-walk-planner.onrender.com | Repo: https://github.com/ramantiw45/Hacktoberfest/tree/main/week-01-touch-grass
 
 ## What I Built
-Who it's for + how it gets them outside in <1 min screen time.
+A walk planner for anyone who keeps missing peak foliage colour. Enter a place + time budget → get the best 2-hour window, a 2–3 km loop idea, one foliage cue, and a packing line — plus a live map pin. Screen time under a minute; the walk is the product. (TODO: your 1-line story — who did you build this for?)
 
 ## Demo
-Live link + 60-sec video/GIF. Test: lat 40.66 lon -73.969.
+Live: https://foliage-walk-planner.onrender.com — try lat 40.660 lon -73.969 (Prospect Park). Cold start takes ~30–60 s on Render free tier.
+TODO: add 60-sec video/GIF + screenshot of a real plan.
 
 ## Code
-GitHub repo link (public + LICENSE).
+https://github.com/ramantiw45/Hacktoberfest/tree/main/week-01-touch-grass — public, MIT LICENSE, `pip install -r requirements.txt` + `uvicorn app:app`.
 
 ## How I Built It
-- Model: Qwen/Qwen2.5-7B-Instruct, https://huggingface.co/Qwen/Qwen2.5-7B-Instruct, Apache-2.0. Swap via MODEL_ID to meta-llama/Meta-Llama-3.1-8B-Instruct.
-- No local GPU: hosted open-weight via Hugging Face Inference API (HF_TOKEN). Same weights you could run on Ollama later (`ollama run qwen2.5`).
-- Stack: FastAPI + Leaflet/OSM (no Google key) + Open-Meteo (no key). Deploy: Render free via render.yaml.
-- Mermaid:
+- Model: `openai/gpt-oss-20b` (OpenAI's open-weight model, Apache-2.0, https://huggingface.co/openai/gpt-oss-20b), served via Groq free tier, OpenAI-compatible endpoint. Swap with one env var (`GROQ_MODEL`, or `GEMINI_MODEL` for Gemma 3, or `MODEL_ID` for any HF model).
+- Honest build log: started on Qwen 2.5 via Hugging Face — then HF put Inference Providers behind paid credits (402), their free lane had no chat models left, and Groq retired both Llama 3.x models to Enterprise mid-week. Because the app talks OpenAI-compatible chat + env-var model IDs, each swap was one line, zero rewrites. That portability IS the open story.
+- No local GPU needed: same weights run locally later (`ollama run gpt-oss:20b`).
+- Stack: FastAPI + Leaflet/OpenStreetMap (no Google key) + Open-Meteo (no key, cached 10 min). Deploy: Render free.
 ```mermaid
 flowchart LR
   User-->Web[Leaflet + FastAPI]
-  Web-->Weather[Open-Meteo]
-  Web-->HF[HuggingFace Inference: Qwen 2.5]
-  HF-->Plan[2-hr walk plan]
+  Web-->Weather[Open-Meteo, cached]
+  Web-->Lane[Free lane chain: Groq → AI Studio → HF → mock]
+  Lane-->Plan[2-hr walk plan]
   Plan-->Outside[Go outside]
 ```
 
 ## Why Does Open Innovation Matter?
-Offline/privacy/cost/swap: $0, no vendor lock, swap models with 1 env var, hackable prompt, could run locally later. Why not closed: GPT-4 API would cost + send location data to a server you don't control + can't fine-tune.
+$0 to run, no vendor lock, swappable models by env var (proven three times in one week), hackable prompt, location data goes to a free inference lane — not a closed API that bills per token and can't be self-hosted. A closed API would have left me stranded when providers changed terms; open weights meant there was always another lane.
 
-## My Agent Session
-Optional: {% agent_session <id> %}
+## Field test (TODO: fill from field-test.md)
+Took it outside: place, weather shown vs actual, photo, what worked, what failed honestly, screen time vs outside time.
 
 ## Prize Categories
-Best Use of Render — FastAPI hosted on Render free tier, live URL above.
+Best Use of Render — FastAPI hosted on Render free tier (Root Directory `week-01-touch-grass`), live URL above.
 
 ## Run it yourself
 ```
 pip install -r requirements.txt
-cp .env.example .env  # add HF_TOKEN from huggingface.co/settings/tokens
-uvicorn app:app --reload
+copy .env.example .env  # add GROQ_API_KEY from console.groq.com (free, no card)
+uvicorn app:app --reload --app-dir week-01-touch-grass
 # open http://127.0.0.1:8000
 ```
-No token? App returns mock plan so judges can still test.
+No key? App serves a mock plan + friendly lane errors, so judges can always click through.
 
 ## Credits
-Open-Meteo, OSM, Hugging Face, Qwen. AI disclosure: some_ai.
+Open-Meteo, OpenStreetMap, Leaflet, Groq, the GPT-OSS open weights. Built with an AI coding agent. AI disclosure: some_ai.
