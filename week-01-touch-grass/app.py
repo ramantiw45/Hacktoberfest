@@ -23,7 +23,7 @@ MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "hf-inference")
 # Free hosted lanes for open-weight chat (no GPU needed). Set ONE key to go live.
 # Chain order: Groq -> Google AI Studio (Gemma) -> Hugging Face -> mock.
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")  # Meta Llama 3.1 8B, free tier
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")  # Meta Llama 3.3 70B, free tier
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemma-3-4b-it")  # Google Gemma 3 4B, free tier
 
@@ -58,7 +58,12 @@ def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) ->
         },
         timeout=60,
     )
-    r.raise_for_status()
+    try:
+        r.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise RuntimeError(
+            f"{e.response.status_code} from {base_url}: {e.response.text[:200]}"
+        ) from e
     return r.json()["choices"][0]["message"]["content"].strip()
 
 
