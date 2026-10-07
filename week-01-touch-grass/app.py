@@ -5,6 +5,7 @@ Default: Qwen/Qwen2.5-7B-Instruct. Swap via MODEL_ID env (e.g. Llama 3.1).
 Maps: Leaflet + OpenStreetMap (no key). Weather: Open-Meteo (no key).
 """
 import os
+import time
 from datetime import datetime
 
 import httpx
@@ -30,7 +31,16 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemma-3-4b-it")  # Google Gemma 3 4B, 
 app = FastAPI(title="Foliage Walk Planner")
 
 
+_WEATHER_TTL = 600  # seconds; Render shares egress IPs, so cache aggressively
+_WEATHER_CACHE: dict = {}
+
+
 def get_weather(lat: float, lon: float) -> dict:
+    key = (round(lat, 2), round(lon, 2))
+    now = time.time()
+    hit = _WEATHER_CACHE.get(key)
+    if hit and now - hit[0] < _WEATHER_TTL:
+        return hit[1]
     url = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability"
@@ -38,11 +48,17 @@ def get_weather(lat: float, lon: float) -> dict:
         "&timezone=auto&forecast_days=2"
     )
     try:
-        r = httpx.get(url, timeout=15, headers={"User-Agent": "foliage-walk-planner/1.0"})
+        headers = {"User-Agent": "foliage-walk-planner/1.0"}
+        r = httpx.get(url, timeout=15, headers=headers)
+        if r.status_code == 429:  # shared-IP rate limit: one polite retry
+            time.sleep(3)
+            r = httpx.get(url, timeout=15, headers=headers)
         r.raise_for_status()
-        return r.json()
+        data = r.json()
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)[:300]}
+    _WEATHER_CACHE[key] = (now, data)
+    return data
 
 
 def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) -> str:
@@ -53,7 +69,7 @@ def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) ->
         json={
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 300,
+            "max_tokens": 1024,
             "temperature": 0.7,
         },
         timeout=60,
@@ -64,7 +80,10 @@ def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) ->
         raise RuntimeError(
             f"{e.response.status_code} from {base_url}: {e.response.text[:200]}"
         ) from e
-    return r.json()["choices"][0]["message"]["content"].strip()
+    text = r.json()["choices"][0]["message"]["content"].strip()
+    if not text:
+        raise RuntimeError(f"empty completion from {model}")
+    return text
 
 
 def llm_plan(location: str, lat: float, lon: float, weather: dict, minutes: int):
