@@ -1,0 +1,5 @@
+fastapi==0.116.1
+uvicorn==0.30.6
+huggingface_hub==0.34.0
+httpx==0.28.1
+python-dotenv==1.0.1
