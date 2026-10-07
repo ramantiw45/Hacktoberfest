@@ -77,34 +77,162 @@ Keep screen time minimal, encourage going outside."""
         return f"Model call failed ({MODEL_ID}): {e}\nFallback: go 9-11am for {minutes} min, bring water."
 
 
-INDEX_HTML = """<!doctype html><html><head><meta charset="utf-8"/>
+INDEX_HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="description" content="Foliage Walk Planner: one input, one autumn walk. The screen is the shortest part."/>
 <title>Foliage Walk Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<style>body{font-family:system-ui;margin:0;padding:16px;max-width:800px} #map{height:320px;margin:12px 0} input,button{padding:8px;margin:4px} pre{white-space:pre-wrap;background:#f4f4f4;padding:12px}</style>
-</head><body>
-<h2>🍂 Foliage Walk Planner</h2>
-<p>1 input → 1 walk. Screen is the shortest part.</p>
-<label>Place name <input id="loc" value="Prospect Park, Brooklyn"/></label>
-<label>Lat <input id="lat" value="40.660" size="7"/></label>
-<label>Lon <input id="lon" value="-73.969" size="8"/></label>
-<label>Minutes <input id="mins" value="120" size="4"/></label>
-<button onclick="plan()">Plan my walk</button>
-<div id="map"></div>
-<pre id="out">Click Plan…</pre>
+<style>
+:root{
+  --paper:#FAF6EC; --card:#FFFDF7; --ink:#232A20; --secondary:#55604E;
+  --moss:#2E4B34; --ember:#A9501C; --line:#E7DCC4;
+  --shadow:0 14px 34px rgba(46,75,52,.16);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.55;
+}
+::selection{background:var(--moss); color:#fff}
+a{color:var(--moss); text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--ember); outline-offset:2px; border-radius:6px}
+.wrap{max-width:880px; margin:0 auto; padding:28px 20px 56px}
+.site-head{display:flex; gap:16px; align-items:flex-start; margin:8px 0 4px}
+.mark{flex:none; width:52px; height:52px; border-radius:16px; background:var(--moss);
+  display:grid; place-items:center; box-shadow:var(--shadow)}
+h1{
+  font-family:Bitter,Georgia,"Times New Roman",serif; font-weight:700;
+  font-size:clamp(1.9rem,1.3rem + 2.6vw,2.9rem); letter-spacing:-0.02em;
+  line-height:1.08; margin:0; text-wrap:balance;
+}
+.lede{margin:8px 0 0; color:var(--secondary); max-width:65ch; font-size:1.05rem}
+.lede strong{color:var(--ink)}
+.grid{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; margin-top:22px}
+@media (max-width:760px){ .grid{grid-template-columns:1fr} }
+.panel{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
+.panel h2{
+  font-family:Bitter,Georgia,serif; font-weight:500; letter-spacing:-0.01em;
+  font-size:1.25rem; margin:2px 0 4px;
+}
+.panel p.hint{margin:0 0 14px; color:var(--secondary); font-size:.95rem; max-width:65ch}
+.field{margin:12px 0}
+label{display:block; font-weight:600; font-size:.92rem; margin-bottom:6px}
+input{
+  width:100%; padding:10px 12px; font:inherit; color:var(--ink);
+  background:#fff; border:1.5px solid var(--line); border-radius:10px;
+}
+input::placeholder{color:#8A8471}
+input:focus{border-color:var(--moss); outline:3px solid rgba(46,75,52,.25); outline-offset:1px}
+.row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+@media (max-width:480px){ .row{grid-template-columns:1fr} }
+button{
+  font:inherit; font-weight:700; color:#fff; background:var(--moss);
+  border:0; border-radius:999px; padding:12px 22px; margin-top:16px; cursor:pointer;
+  transition:transform .18s ease-out, background .18s ease-out;
+}
+button:hover{background:#24402B; transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+button:disabled{background:#9AA393; cursor:wait; transform:none}
+#map{height:340px; border-radius:var(--radius); box-shadow:var(--shadow); background:#EDE7D3; z-index:0}
+@media (max-width:760px){ #map{height:280px} }
+.result{
+  margin-top:16px; background:var(--card); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:20px; max-width:75ch;
+}
+.result h2{
+  font-family:Bitter,Georgia,serif; font-weight:500; font-size:1.25rem;
+  letter-spacing:-0.01em; margin:0 0 6px;
+}
+.result pre{
+  margin:8px 0 0; padding:0; background:none; font:inherit; line-height:1.6;
+  white-space:pre-wrap;
+}
+.meta{margin:14px 0 0; color:var(--secondary); font-size:.88rem; font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink)}
+.error-text{color:#7C2D12}
+footer{margin-top:28px; color:var(--secondary); font-size:.88rem; max-width:75ch}
+footer p{margin:6px 0}
+.reveal{animation:rise .5s cubic-bezier(.16,1,.3,1) both}
+@keyframes rise{from{opacity:0; transform:translateY(10px); filter:blur(3px)}
+  to{opacity:1; transform:none; filter:none}}
+@media (prefers-reduced-motion:reduce){ .reveal{animation:none} button{transition:none} }
+</style>
+</head><body><div class="wrap">
+<header class="site-head">
+  <span class="mark" aria-hidden="true">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#F5EEDC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21c-5 0-8-3.5-8-9 0-4 2.5-7.5 8-9 5.5 1.5 8 5 8 9 0 5.5-3 9-8 9Z"/>
+      <path d="M12 21V8"/><path d="M12 13l3.2-3.2"/><path d="M12 16l-3.4-3.4"/>
+    </svg>
+  </span>
+  <div>
+    <h1>Foliage Walk Planner</h1>
+    <p class="lede">One input, one autumn walk. <strong>The screen is the shortest part</strong> — plan in under a minute, then go outside.</p>
+  </div>
+</header>
+<main>
+<div class="grid">
+  <section class="panel" aria-labelledby="plan-h">
+    <h2 id="plan-h">Plan my walk</h2>
+    <p class="hint">Pick a place and a time budget. We check the sky and the trees, you handle the walking.</p>
+    <div class="field"><label for="loc">Place</label><input id="loc" value="Prospect Park, Brooklyn" autocomplete="off"/></div>
+    <div class="row">
+      <div class="field"><label for="lat">Latitude</label><input id="lat" value="40.660" inputmode="decimal" autocomplete="off"/></div>
+      <div class="field"><label for="lon">Longitude</label><input id="lon" value="-73.969" inputmode="decimal" autocomplete="off"/></div>
+      <div class="field"><label for="mins">Minutes</label><input id="mins" value="120" inputmode="numeric" autocomplete="off"/></div>
+    </div>
+    <button id="go" onclick="plan()">Plan my walk</button>
+  </section>
+  <div id="map" role="img" aria-label="Map of the walk area. Plan a walk to place a pin."></div>
+</div>
+<section class="result" aria-live="polite" aria-labelledby="walk-h">
+  <h2 id="walk-h">Your walk</h2>
+  <pre id="out">Choose a place and press “Plan my walk”. Your route appears here — then close the laptop.</pre>
+  <p class="meta" id="meta"></p>
+</section>
+</main>
+<footer>
+  <p>Maps © OpenStreetMap contributors · Weather by Open-Meteo · Plan written by an open-weight model.</p>
+  <p>Field-test rule: if the plan took longer to read than your walk took to start, we failed. Tell us.</p>
+</footer>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let map=L.map('map').setView([40.66,-73.969],13);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 let pin=L.marker([40.66,-73.969]).addTo(map);
 async function plan(){
- const loc=document.getElementById('loc').value, lat=document.getElementById('lat').value,
- lon=document.getElementById('lon').value, mins=document.getElementById('mins').value;
- document.getElementById('out').textContent='Planning…';
- map.setView([+lat,+lon],13); pin.setLatLng([+lat,+lon]);
- const r=await fetch(`/api/plan?location=${encodeURIComponent(loc)}&lat=${lat}&lon=${lon}&minutes=${mins}`);
- const j=await r.json();
- document.getElementById('out').textContent=j.plan+`\\n\\n(model: ${j.model}, weather: ${j.weather_summary})`;
+ const btn=document.getElementById('go'), out=document.getElementById('out'),
+       meta=document.getElementById('meta');
+ const loc=document.getElementById('loc').value.trim()||'Somewhere green',
+       lat=parseFloat(document.getElementById('lat').value),
+       lon=parseFloat(document.getElementById('lon').value),
+       mins=Math.min(300,Math.max(30,parseInt(document.getElementById('mins').value,10)||120));
+ if(!isFinite(lat)||!isFinite(lon)){
+   out.innerHTML='<span class="error-text">Those coordinates don’t look right.</span> Latitude runs -90 to 90, longitude -180 to 180 — fix them and try again.';
+   meta.textContent=''; return;
+ }
+ btn.disabled=true; btn.setAttribute('aria-busy','true'); btn.textContent='Reading the sky…';
+ out.textContent='Checking weather and foliage for '+loc+'…';
+ map.setView([lat,lon],13); pin.setLatLng([lat,lon]);
+ try{
+   const r=await fetch(`/api/plan?location=${encodeURIComponent(loc)}&lat=${lat}&lon=${lon}&minutes=${mins}`);
+   if(!r.ok) throw new Error('server said '+r.status);
+   const j=await r.json();
+   out.textContent=j.plan;
+   meta.innerHTML='';
+   meta.append('Model: ',Object.assign(document.createElement('b'),{textContent:j.model}),` · ${j.weather_summary}`);
+   const card=out.closest('.result'); card.classList.remove('reveal'); void card.offsetWidth; card.classList.add('reveal');
+ }catch(e){
+   out.innerHTML='<span class="error-text">Couldn’t reach the planner.</span> Check your connection and press “Plan my walk” again — your place is still filled in.';
+   meta.textContent='';
+ }finally{ btn.disabled=false; btn.removeAttribute('aria-busy'); btn.textContent='Plan my walk'; }
 }
 </script></body></html>"""
 
