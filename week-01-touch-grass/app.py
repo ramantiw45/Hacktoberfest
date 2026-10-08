@@ -50,12 +50,19 @@ def get_weather(lat: float, lon: float) -> dict:
     try:
         headers = {"User-Agent": "foliage-walk-planner/1.0"}
         r = httpx.get(url, timeout=15, headers=headers)
-        if r.status_code == 429:  # shared-IP rate limit: one polite retry
-            time.sleep(3)
+        if r.status_code == 429:  # shared-IP rate limit: back off, then give up
+            time.sleep(5)
             r = httpx.get(url, timeout=15, headers=headers)
         r.raise_for_status()
         data = r.json()
     except Exception as e:
+        # Stale-if-error: an older reading beats none for a "is it warm?" question.
+        stale = next(
+            (v[1] for v in _WEATHER_CACHE.values() if isinstance(v[1], dict) and "daily" in v[1]),
+            None,
+        )
+        if stale:
+            return dict(stale, stale=True)
         return {"error": str(e)[:300]}
     _WEATHER_CACHE[key] = (now, data)
     return data
@@ -83,6 +90,8 @@ def _chat_openai_compat(base_url: str, api_key: str, model: str, prompt: str) ->
     text = r.json()["choices"][0]["message"]["content"].strip()
     if not text:
         raise RuntimeError(f"empty completion from {model}")
+    if "?" in text and text.count("?") >= 1 and len(text) < 220:
+        raise RuntimeError(f"{model} asked a question instead of planning: {text[:120]}")
     return text
 
 
@@ -92,19 +101,32 @@ def llm_plan(location: str, lat: float, lon: float, weather: dict, minutes: int)
     tmax = (daily.get("temperature_2m_max") or ["?"])[0]
     tmin = (daily.get("temperature_2m_min") or ["?"])[0]
     rain = (daily.get("precipitation_probability_max") or ["?"])[0]
+    has_weather = tmax != "?"
 
-    prompt = f"""You plan short fall foliage walks that get people outside fast.
+    weather_line = (
+        f"Weather tomorrow: high {tmax}C low {tmin}C rain {rain}%"
+        if has_weather
+        else (
+            "Weather: unavailable right now, so plan for the season and general "
+            "time of day instead. Do NOT ask me questions and do NOT ask for a "
+            "forecast. Give a complete plan anyway."
+        )
+    )
+
+    prompt = f"""You plan short autumn walks that get people outside fast.
 Location: {location} ({lat:.3f}, {lon:.3f})
-Weather tomorrow: high {tmax}C low {tmin}C rain {rain}%
+{weather_line}
 Time budget: {minutes} minutes.
 
-Reply in 5 short lines:
+You MUST reply with exactly 5 short numbered lines and nothing else. Never ask
+a question. Never request more data. If weather is missing, give generic
+seasonal advice instead.
+
 1. Best 2-hour window
 2. 2-3km loop idea (park/trail type, no car needed if possible)
-3. Foliage cue to look for
+3. One nature cue to look for, true for {location} in October
 4. What to bring (1 line)
-5. One-sentence why this beats scrolling.
-Keep screen time minimal, encourage going outside."""
+5. One-sentence why this beats scrolling."""
 
     errors: list[str] = []
     if GROQ_API_KEY:

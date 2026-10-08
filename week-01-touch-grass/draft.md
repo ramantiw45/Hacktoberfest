@@ -12,7 +12,7 @@ I built it because planning the walk is exactly where plans die. Weather apps wa
 ## Demo
 Live: https://foliage-walk-planner.onrender.com — try Virar (19.45510, 72.82513) or Prospect Park (40.660, -73.969). Cold start takes ~30-60 s on Render free tier.
 
-![The plan, generated live on the deployed app](https://github.com/ramantiw45/Hacktoberfest/raw/main/week-01-touch-grass/field-photos/foiliage.png)
+![The plan, generated live on the deployed app](https://raw.githubusercontent.com/ramantiw45/Hacktoberfest/main/week-01-touch-grass/field-photos/foiliage.png)
 
 Verbatim output for `Virar`:
 1. 10:00-12:00
@@ -24,11 +24,11 @@ Verbatim output for `Virar`:
 ## Field test — I took it to Virar
 One tap, then I went outside for one to two hours. Screenshots from the walk:
 
-![Hillside above Virar town, estuary beyond](https://github.com/ramantiw45/Hacktoberfest/raw/main/week-01-touch-grass/field-photos/img1.jpeg)
+![Hillside above Virar town, estuary beyond](https://raw.githubusercontent.com/ramantiw45/Hacktoberfest/main/week-01-touch-grass/field-photos/img1.jpeg)
 
-![The city below the viewpoint](https://github.com/ramantiw45/Hacktoberfest/raw/main/week-01-touch-grass/field-photos/img2.jpeg)
+![The city below the viewpoint](https://raw.githubusercontent.com/ramantiw45/Hacktoberfest/main/week-01-touch-grass/field-photos/img2.jpeg)
 
-![Virar Lake in the morning haze](https://github.com/ramantiw45/Hacktoberfest/raw/main/week-01-touch-grass/field-photos/img3.jpeg)
+![Virar Lake in the morning haze](https://raw.githubusercontent.com/ramantiw45/Hacktoberfest/main/week-01-touch-grass/field-photos/img3.jpeg)
 
 **One minute on screen. One to two hours outside.** That ratio is the entire point of the theme.
 
