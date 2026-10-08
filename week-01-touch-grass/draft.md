@@ -65,6 +65,11 @@ $0 to run, no vendor lock, swappable models by env var (proven three times in on
 ## Theme mapping
 Touch Grass, literally: ~1 minute on a screen, 1-2 hours of hill, lake and estuary. Getting people *into the world*: the app's only job is to end its own usefulness — every output is an instruction to close the tab. *Screen is the shortest part:* sixty to one, measured on my own walk.
 
+## My Agent Session
+The whole build, including the two dead provider integrations and the empty-completion bug, is saved as a session. Judges can read the process, not just the result.
+
+{% agent_session building-foliage-walk-planner-with-open-weight-ai-no-local-gpu-uyb75a %}
+
 ## Prize Categories
 Best Use of Render — FastAPI hosted on Render free tier (Root Directory `week-01-touch-grass`), live URL above.
 
