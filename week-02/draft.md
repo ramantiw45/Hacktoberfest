@@ -52,8 +52,8 @@ One page of the sample notebook: 12 transactions, 8 customers, ₹3,210 given, �
 
 The shop's record of **who owes what, and to whom** is about as private as a small business gets. Names, amounts, neighbourhood relationships. That record should not require an account, a subscription, or an API that reads it.
 
-- **Reading:** `gemma-3-27b-it` (open weights) via Google AI Studio's free tier, `qwen/qwen3.8-27b` on Groq as failover, `gemma3:4b` via Ollama when the shop's own machine can carry it, and a deterministic parser with no key and no network as the floor.
-- **Swapping is one env var.** Every lane speaks the same chat-completions shape, so `OLLAMA_BASE_URL` pointed at a local model moves the whole pipeline on-device with zero code changes. Nobody can re-price a shop's own bookkeeping.
+- **Reading:** `gemma-4-31b-it` (open weights) via Google AI Studio's free tier, `qwen/qwen3.8-27b` on Groq as failover, `gemma3:4b` via Ollama when the shop's own machine can carry it, and a deterministic parser with no key and no network as the floor.
+- **Swapping is one env var.** Ollama and Groq speak plain chat-completions; Gemma 4 on AI Studio has a small native-route adapter (it is no longer served on the OpenAI-compatible endpoint). Pointing `OLLAMA_BASE_URL` at a local model still moves the whole pipeline on-device with zero code changes. Nobody can re-price a shop's own bookkeeping.
 - **Cost structure:** at ₹0 per page, the ₹99/month price is a business. Per-token billing turns every read into a cost of goods, and at a ₹99 price point that math gets thin fast.
 - **Data shape:** one SQLite file. It can be copied, backed up, deleted, or never uploaded at all. There is no vendor in the middle of a shop's ledger.
 
@@ -72,7 +72,7 @@ One more thing, because "runs locally" is the easiest claim in a hackathon post 
         ▼
   open-weight lane chain
     gemma3:4b       Ollama, on-device, offline
-    gemma 3 27B     AI Studio, free tier
+    gemma 4 31B     AI Studio, free tier (native generateContent)
     qwen 3.8        Groq, failover
     deterministic   no key, no network — text only
         │
@@ -126,7 +126,7 @@ Three posts that shaped this build:
 
 ## Prize categories
 
-**Best Use of Gemma.** Gemma 3 is both the default hosted reader (`gemma-3-27b-it` via AI Studio free tier) and the first choice for the on-device lane (`gemma3:4b` via Ollama). The two Gemma lanes sit at the two ends of the price/privacy trade-off — one free and remote, one free and offline — and both are selected by environment variable, not by code.
+**Best Use of Gemma.** Gemma 4 is the default hosted reader (`gemma-4-31b-it` via AI Studio's free tier, on the native `generateContent` route — the OpenAI-compatible one stopped serving Gemma after 3 was retired in 2026), and Gemma 3 4B (`gemma3:4b` via Ollama) is the on-device lane. The two Gemma lanes sit at the two ends of the price/privacy trade-off — one free and remote, one free and offline — and both are selected by environment variable, not by code.
 
 <!-- If a live demo exists, add: Best Use of Render — deployed ... . If a .tech domain is used, add it here. Otherwise delete this comment. -->
 
@@ -145,7 +145,7 @@ Tests: `python tests/test_pipeline.py` (4 checks — parsing, money maths, remin
 
 ## Credits
 
-Built with an AI coding agent in an opencode session over one weekend. The product truth was the human's — the shopkeeper, the counter scene, the rule that names stay coded — and the visual direction was chosen from options the agent dealt and built; the agent wrote the app, the test suite, the design system and this draft, and the human approved each ship decision. FastAPI, Jinja2, SQLite, `httpx`, the self-hosted Rajdhani, Mukta and Spline Sans Mono (all SIL OFL), and the open weights of Gemma 3 and Qwen 3.8. The sample notebook is synthetic and labelled as such in the repo.
+Built with an AI coding agent in an opencode session over one weekend. The product truth was the human's — the shopkeeper, the counter scene, the rule that names stay coded — and the visual direction was chosen from options the agent dealt and built; the agent wrote the app, the test suite, the design system and this draft, and the human approved each ship decision. FastAPI, Jinja2, SQLite, `httpx`, the self-hosted Rajdhani, Mukta and Spline Sans Mono (all SIL OFL), and the open weights of Gemma 4, Gemma 3 and Qwen 3.8. The sample notebook is synthetic and labelled as such in the repo.
 
 **AI disclosure: some_ai.**
 

@@ -17,7 +17,7 @@ own language** (English / हिंदी / मराठी).
   <https://github.com/ramantiw45/UdhaarBook> (`main`; `3c56eff` = finish-review
   fixes, `d3d276d` = deploy guide). Nothing heavy belongs inside the
   Hacktoberfest tree.
-- **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 3 27B on
+- **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 4 31B on
   AI Studio's free tier as the default reader, Gemma 3 4B via Ollama as the
   on-device lane, both selected by env var.
 - **Second target, needs a call:** Best Use of Render. The `render.yaml` blueprint
@@ -37,7 +37,7 @@ The business case (₹99/month vs. ~₹650/month recovered leakage) is written u
 
 | Layer | What | Openness |
 |---|---|---|
-| Reading (default) | `gemma-3-27b-it` via Google AI Studio free tier | open weights |
+| Reading (default) | `gemma-4-31b-it` via Google AI Studio free tier | open weights |
 | Reading (offline) | `gemma3:4b` via Ollama | open weights, on-device |
 | Reading (failover) | `qwen/qwen3.8-27b` via Groq free tier | open weights |
 | Reading (floor) | built-in deterministic parser | no key, no network |
@@ -101,6 +101,31 @@ Also fixed: `GET /read` returns 303 to `/` instead of raw JSON, and dead code is
 gone (`--track`, `static/reminders.js`). Detector state: no errors, no
 `text-occlusion`; the remaining warnings are the identity strip (`side-tab` ×4),
 a white-ground static-scan contrast false positive, and the em-dash advisory.
+
+## Revision 3 — the Gemma 4 route (deploy-day fix)
+
+The first live read failed with `ai-studio: 404 Not Found` on
+`/v1beta/openai/chat/completions`, next to `groq: 429`. Two separate facts:
+
+1. **Gemma 3 was retired from the Gemini API in 2026.** AI Studio now serves
+   only `gemma-4-31b-it` and `gemma-4-26b-a4b-it`, and Gemma 4 is **not** on the
+   OpenAI-compatible route at all — only on the native `generateContent` route.
+   Renaming the model alone would still have 404'd.
+2. Groq's 429 was its free-tier rate limit, not a code fault. With the Gemma
+   lane answering, it drops off the demo path.
+
+The AI Studio lane now carries a small native-protocol adapter
+(`_gemini_payload` / `_gemini_call` in `udhaar/llm.py`): system prompt becomes
+`systemInstruction`, inline base64 images become `inline_data`, and the reply is
+read from `candidates[0].content.parts`. Ollama and Groq keep the OpenAI shape.
+The old `/openai` base URL in existing `.env` files is normalised
+automatically, and the default model is `gemma-4-31b-it`.
+
+Proof: `tests/test_pipeline.py` is now **5 checks** — the new one asserts the
+native body, the `/openai` normalisation and the Gemma 4 default —
+and `tools/smoke_http.py` is still **20 PASS**. The hosted lane itself awaits
+the key in the Render dashboard; that is the one thing this machine cannot
+prove.
 
 ## Open decisions (need the user)
 
