@@ -14,7 +14,7 @@
 
 *This is a submission for the [Hacktoberfest Open-Source AI Challenge Week 2: Side Hustle](https://dev.to/challenges/hacktoberfest-week2-2026-10-12)*
 
-TL;DR — Photograph one page of a shop's handwritten credit notebook. An open-weight model reads it, the shopkeeper confirms every line, the balances follow, and each customer gets a polite WhatsApp reminder **in their own language**. The AI does the reading; the shopkeeper does the deciding. Repo: REPO | Live: LIVE
+TL;DR — Photograph one page of a shop's handwritten credit notebook. An open-weight model reads it (a deterministic parser takes over when there is no key), the shopkeeper confirms every line, the balances follow, and each customer gets a polite WhatsApp reminder **in their own language**. The AI does the reading; the shopkeeper does the deciding. Repo: REPO | Live: LIVE
 
 ## What I built
 
@@ -45,7 +45,7 @@ The competitor is not another app — it's the pocket of khata apps that want th
 | ![The book: every customer, given / paid / balance](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/02-the-book.jpg) | ![Who to ask: coded names, hue strips, reminder per customer](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/03-who-to-ask.jpg) |
 | **The book** — the ledger: what was given, what came back, what is left, per page. | **Who to ask** — the reminder screen. Names stay coded until you tap; the message is already written. |
 
-One page of the sample notebook: 12 transactions, 8 customers, ₹3,210 given, ₹1,000 received, **₹2,210 still out**. Four of those eight have both taken credit and paid some back — that's the state a shop actually lives in, and the one a hand-written margin is worst at tracking.
+One page of the sample notebook: 12 transactions, 8 customers, ₹3,210 given, ₹1,000 received, **₹2,210 still out**. Three of those eight have both taken credit and paid some back — that's the state a shop actually lives in, and the one a hand-written margin is worst at tracking.
 
 ## Why open matters for what I built
 
@@ -58,25 +58,27 @@ The shop's record of **who owes what, and to whom** is about as private as a sma
 
 The honest asterisk: **the model only writes the sentence, never the number.** The amount in a reminder is read from the ledger; the model gets to soften the wording and nothing else. That rule is in the code, not the prompt.
 
-One more thing, because "runs locally" is the easiest claim in a hackathon post to fake: the repo ships `docs/offline-proof.md`, a five-step test (install the reader, switch the Wi-Fi off *physically*, submit a page) and a table of **what each possible outcome lets you claim** — including the two claims you are never allowed to write, like "100% offline" after a hosted lane answered the request. On this machine the honest row is the third one, and that is the row I used.
+One more thing, because "runs locally" is the easiest claim in a hackathon post to fake: the repo ships `docs/offline-proof.md`, a five-step test (install the reader, switch the Wi-Fi off *physically*, submit a page) and a table of **what each possible outcome lets you claim** — including the claims you are never allowed to write, like "100% offline" after a hosted lane answered the request. On this machine the honest row is the third one, and that is the row I used.
 
 ## How it works
 
-```mermaid
-flowchart LR
-  P[Photo of one khata page] --> O[Local OCR<br/>optional, CPU only]
-  P -.->|no OCR installed| L
-  O --> T[Text, on this machine]
-  T --> L{Open-weight lane chain}
-  L --> L1[Gemma 3 4B · Ollama<br/>on-device, offline]
-  L --> L2[Gemma 3 27B · AI Studio<br/>free tier]
-  L --> L3[Qwen 3.8 · Groq<br/>failover]
-  L --> L4[Deterministic parser<br/>no key, no network]
-  L --> R[Transaction rows]
-  R --> C[Shopkeeper confirms]
-  C --> D[(One SQLite file)]
-  D --> B[Balances per customer]
-  D --> W[WhatsApp reminder<br/>en / हिंदी / मराठी]
+```text
+  one photo of a khata page
+          │
+          ├── local OCR installed?  ──►  text, on this machine (CPU only)
+          │
+          └── no OCR  ──►  open-weight lane chain
+                             gemma3:4b        Ollama, on-device, offline
+                             gemma 3 27B      AI Studio, free tier
+                             qwen 3.8         Groq, failover
+                             deterministic    no key, no network
+          │
+          ▼
+  transaction rows ──► shopkeeper confirms ──► one SQLite file
+                                                   │
+                                                   ├──► balances per customer
+                                                   └──► WhatsApp reminder
+                                                        en / हिंदी / मराठी
 ```
 
 - **Stack:** FastAPI + Jinja2 + SQLite + `httpx`. No model SDKs, so a new lane is a dozen lines and a Python upgrade can't break the app on a Tuesday. Fonts are self-hosted; nothing on any screen makes a third-party request.
@@ -88,7 +90,11 @@ I am not going to pretend this was an OCR problem. Reading a messy page is the e
 
 The hard half is that **this screen lives on a counter where other people can see it.** The reminder screen is a list of the shop's debtors, and a shopkeeper will not use a tool that flashes a neighbour's name at whoever is standing there.
 
-So the names are coded: each customer shows as a page number, a hue strip and an amount, and one tap decodes the row into the name, the plain-language history ("1 line · last 15/10 · ₹560 given") and the message. The first row is decoded on load, so the screen teaches itself in one look.
+The screen I designed for is 9pm: shutter half down, one tube light, the shopkeeper alone with the notebook and a phone. That is the one moment the names are safe to show — and the moment the screen has to be worth opening.
+
+So the names are coded: each customer shows as an entry number (their place in the order to ask), a hue strip and an amount, and one tap decodes the row into the name, the plain-language history ("Page 1 · 1 line · last 15/10 · ₹560 given") and the message. The first row is decoded on load, so the screen teaches itself in one look. Decoding is a one-tap act on a 68px row, and Reveal opens all eight when the counter is finally empty.
+
+The screen is built as a catalogue sleeve, not a dashboard: one white hairline per customer, the amount as the only headline, identity as a hue strip and a number until you touch it. That is written down as a design system rather than left as taste.
 
 Two more things I made the design carry its weight on:
 
@@ -101,7 +107,7 @@ Two more things I made the design carry its weight on:
 
 An honest build log, because the flaws are more useful to read than the features.
 
-- **My machine cannot install the OCR layer.** Python 3.14 has no wheels for the usual on-device runtimes yet, so on *this* box the photo path resolves to: no local reader → model lane → and with no key either, an honest error and a link to the sample page. The local OCR path is written, documented in `requirements-ocr.txt` and untested here. That is a gap, not a feature, and I've labelled it one in the README.
+- **My machine cannot install the OCR layer.** Python 3.14 has no wheels for the usual on-device runtimes yet, so on *this* box the photo path resolves to: no local reader → model lane → and with no key either, a screen that says exactly that and hands you the sample page. The local OCR path is written, documented in `requirements-ocr.txt` and untested here. That is a gap, not a feature, and I've labelled it one in the README.
 - **No shopkeeper has used this yet.** No field test, no first user, no one has paid me ₹99. The sample notebook is a fixture I wrote; the shop name in the screenshots is a fixture shop. I would rather say that plainly than dress up a demo as a deployment.
 - **Handwriting is genuinely hard, and the honest move is to say so.** [A benchmark of four open-source OCR engines on 5,578 handwritten prescriptions](https://dev.to/kaniel_outis/how-well-can-ocr-read-doctor-handwriting-in-2026-54hn) found the best of them get *one word in three* exactly right. I read that before building and it changed the design: the app does not try to be right, it tries to be **checkable**. Every figure is one tap from the raw text the reader saw, and the ledger never accepts a row nobody confirmed.
 - **Devanagari handwriting is the weakest case** for every reader I looked at. The reminder templates are in Marathi and Hindi because the *message* is the part that must feel native, but I am not going to claim the reading is equally strong in all three scripts.
@@ -135,7 +141,7 @@ Tests: `python tests/test_pipeline.py` (4 checks — parsing, money maths, remin
 
 ## Credits
 
-Built with an AI coding agent in an opencode session over one weekend: the app, the test suite, the visual world and this post were drafted together, and every design decision was made by a human. FastAPI, Jinja2, SQLite, `httpx`, Pico/Martel/Noto fonts (self-hosted), and the open weights of Gemma 3 and Qwen 3.8. The sample notebook is synthetic and labelled as such in the repo.
+Built with an AI coding agent in an opencode session over one weekend. The product truth was the human's — the shopkeeper, the counter scene, the rule that names stay coded — and the visual direction was chosen from options the agent dealt and built; the agent wrote the app, the test suite, the design system and this draft, and the human approved each ship decision. FastAPI, Jinja2, SQLite, `httpx`, the self-hosted Rajdhani, Mukta and Spline Sans Mono (all SIL OFL), and the open weights of Gemma 3 and Qwen 3.8. The sample notebook is synthetic and labelled as such in the repo.
 
 **AI disclosure: some_ai.**
 

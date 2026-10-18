@@ -12,7 +12,8 @@ own language** (English / हिंदी / मराठी).
 
 - **Code lives outside this folder**, by design:
   `C:\Users\Raman Tiwari\MyDevelopments\UdhaarBook` (its own git repo, commit
-  `52c1d5c`). Nothing heavy belongs inside the Hacktoberfest tree.
+  `3c56eff` after the finish-review fixes). Nothing heavy belongs inside the
+  Hacktoberfest tree.
 - **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 3 27B on
   AI Studio's free tier as the default reader, Gemma 3 4B via Ollama as the
   on-device lane, both selected by env var.
@@ -50,10 +51,13 @@ the ledger.
   filled before publishing.
 - Screenshots: `UdhaarBook/docs/screens/*.jpg` (read, confirm, book, ask,
   ask-greyscale, phone).
-- Design record: `UdhaarBook/PRODUCT.md`, `.impeccable/surfaces/route-reminders.md`,
-  `.impeccable/review/` (captures + detector findings + review packet).
-- Tests: `pytest tests/` (4 pipeline tests) and `tools/smoke_http.py`
-  (20 HTTP checks, including "a photo upload fails honestly, not with a blank page").
+- Design record: `UdhaarBook/PRODUCT.md`, `.impeccable/surface-brief-reminders.md`,
+  `DESIGN.md` + `.impeccable/design.json` (the written system, reconciled to the
+  shipped build), and `.impeccable/review/` (captures + detector findings +
+  review packet, revision 2).
+- Tests: `python tests/test_pipeline.py` (4 pipeline tests) and
+  `python tools/smoke_http.py` (20 HTTP checks, including "a photo upload fails
+  honestly, not with a blank page"). Neither needs a test framework installed.
 
 ## Honest state (do not upgrade this in the post)
 
@@ -61,9 +65,36 @@ the ledger.
   shop in the screenshots (`Suresh Kirana`) is a fixture shop.
 - **The photo path is unproven on this machine.** Python 3.14 has no wheels for
   the on-device OCR runtimes, and no model key is set, so an uploaded photo gets
-  an honest refusal and a pointer to the sample page. The text path, parsing,
-  ledger and reminders are exercised end to end.
+  an honest answer (nothing here can read it, use the sample) rather than a
+  crash or a blank table. The text path, parsing, ledger and reminders are
+  exercised end to end.
 - **No live demo URL yet** (Week 1 ran on Render; this one is not deployed).
+
+## Revision 2 — after the finish review
+
+The finish reviewer returned *fix* with eight material findings. All eight are
+closed in `UdhaarBook` commit `3c56eff`, and every capture plus the review packet
+was regenerated from that build:
+
+1. Footer and read screen name what actually read the page (parser vs OCR vs
+   model lane); the confirm screen no longer implies a model saw the image.
+2. The plot band is capped at 118px with one dashed aggregate hairline past
+   eighteen dues (proved on a throwaway 25-customer database).
+3. Collapsed decode panels are `inert` — 18 tab stops at rest, not 32.
+4. Copy is the one solid full-width action in a row; WhatsApp is a quiet 44px
+   text link beneath it.
+5. The identity device commits: 6px strip at rest, 10×44px on the decoded row,
+   the entry number stepping to 15px there.
+6. The "2 lines" filler is gone; at rest a row is entry number, mark, amount, and
+   the page number moved into the opened row's lineage.
+7. Seed `d2007df6` is recorded in `options-bolder.json`.
+8. `DESIGN.md` + `.impeccable/design.json` now describe the shipped build; the
+   detector's design-system advisories fell from 27 to zero.
+
+Also fixed: `GET /read` returns 303 to `/` instead of raw JSON, and dead code is
+gone (`--track`, `static/reminders.js`). Detector state: no errors, no
+`text-occlusion`; the remaining warnings are the identity strip (`side-tab` ×4),
+a white-ground static-scan contrast false positive, and the em-dash advisory.
 
 ## Open decisions (need the user)
 
