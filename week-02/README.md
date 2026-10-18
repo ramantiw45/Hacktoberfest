@@ -1,8 +1,12 @@
 # Week 2 — Side Hustle (Oct 12 → Oct 18, 11:59pm PDT)
 
-**Submission status: draft written, repo public at
-<https://github.com/ramantiw45/UdhaarBook>, deploy guide committed, not yet
-deployed or published.**
+**Submission status: PUBLISHED 19 Oct 2026, 01:24 IST** — article id 4873913,
+<https://dev.to/ramantiw45/udhaar-book-photograph-the-khata-get-the-udhaar-back-5bej>
+— with tags `hf26challenge` `devchallenge` `gemma` `hacktoberfest`; it appears in
+the challenge feed before the cutoff. Repo public at
+<https://github.com/ramantiw45/UdhaarBook>. The photo path was tested with an AI
+Studio key on a test khata page; the app has not been deployed to a public host
+and no shopkeeper has used it.
 Deadline in IST: Mon Oct 19, 12:29 PM.
 
 ## What was built
@@ -131,25 +135,43 @@ and `tools/smoke_http.py` is still **20 PASS**. The hosted lane itself awaits
 the key in the Render dashboard; that is the one thing this machine cannot
 prove.
 
-## Open decisions (need the user)
+## Revision 4 — second finish review (the six findings closed)
 
-1. ~~Push `UdhaarBook` as a public repo~~ — **done**: public at
-   <https://github.com/ramantiw45/UdhaarBook>, `main` is the default branch, and
-   every screenshot URL in `draft.md` resolves from it.
-2. **Deploy to Render** from the blueprint, following
-   `UdhaarBook/docs/deploy.md`: create the free AI Studio key, paste it as
-   `AI_STUDIO_API_KEY`, then `GET /healthz` should list
-   `["ai-studio","deterministic"]`. That deploy is both the `LIVE` line and the
-   Best Use of Render entry. Without a key the demo still works on the parser.
-3. **Publish the DEV post** (`draft.md`) as a draft first; fill `LIVE` only if the
-   deploy is healthy. Required tag `#hf26challenge`.
-4. Optional: save the agent session with DevRelay for `SESSION`.
+A read-only scoring review of revision 2 returned *fix* with six material
+findings, all inside the round-1 fixes. They were closed before publishing:
 
-## Reminders for publishing
+1. **`inert` hid the message, not just the buttons.** It sat on `.decode`, which
+   removes the whole subtree from the accessibility tree. It moved to
+   `.decode .tools`, so a closed row's lineage and message stay exposed while
+   its Copy and WhatsApp buttons stay out of the tab order. 18 tab stops at rest
+   still holds.
+2. **The written system was half-old.** `design.json` still said 8px for the hue
+   slab and the track grid while the CSS shipped 6px at rest and 10px on the
+   decoded row; `DESIGN.md` still described the removed "line count". Both files
+   were re-read against `style.css`.
+3. **The row's accessible name went stale.** `aria-label` now rebuilds on every
+   open and close from the entry number, the amount, the verb and — when decoded
+   — the customer's name ("Entry 02, ₹505 outstanding, Imran Shaikh. Hide the
+   name and the message.").
+4. **"Copied" was amber text on white (1.47:1).** The confirmation is now a
+   filled amber state of the solid button (black on amber), and a polite live
+   region announces "Message copied".
+5. **The reader select clipped at 390px.** The option is now "Auto — best reader
+   here"; the explanation moved into the hint below it.
+6. **Step numbers were ~3.3:1.** `01/02/03` moved from Structure Crimson to Text
+   Red (~6:1).
 
-- Required tag `#hf26challenge`; the field is 4 tags max
-  (`hf26challenge`, `devchallenge`, `gemma`, `hacktoberfest` fits).
-- Stage on DEV as a **draft first**, hand over the `edit_url`, publish only on an
-  explicit yes. AI disclosure stays `some_ai`.
-- Repo is public with LICENSE (MIT). Do not link the demo until `/healthz` is
-  green.
+Verified in the browser: the closed panel is not inert and its controls are;
+labels are correct on open and close; the amber flash computes; the live region
+exists; 18 tab stops. `tests/test_pipeline.py` 5/5, `tools/smoke_http.py` 20/20,
+and `docs/screens/01-read.jpg` was recaptured from the shipping build.
+
+## After publishing
+
+1. **Live demo (optional, still open).** The app is not on a public host. If it
+   is deployed later, add the URL to the post's TL;DR and a *Best Use of Render*
+   line, then confirm `/healthz` lists `["ai-studio","deterministic"]`.
+2. **Agent session (optional).** The liquid tag was removed from the post; it
+   can be added back with DevRelay's session embed.
+3. ~~Publish the DEV post~~ — **done**: 19 Oct 2026, 01:24 IST, article id
+   4873913, already in the `hf26challenge` feed.

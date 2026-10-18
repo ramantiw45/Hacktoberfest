@@ -1,17 +1,10 @@
-# Udhaar Book — DEV draft (Week 2: Side Hustle)
+# Udhaar Book — DEV post (Week 2: Side Hustle)
 
-> **Draft status:** the repo and every screenshot URL are live. Before
-> publishing:
-> - `LIVE` — add the Render URL to the TL;DR and a *Best Use of Render* line in
->   the prize section **only once the deploy is healthy**. If it is not up, leave
->   both out; never link a demo that is not running.
-> - `SESSION` — only if we save an agent session with DevRelay; otherwise delete
->   the liquid tag at the end of this file.
-> Repo: https://github.com/ramantiw45/UdhaarBook (public, MIT licence).
+> **Published** 19 Oct 2026 — https://dev.to/ramantiw45/udhaar-book-photograph-the-khata-get-the-udhaar-back-5bej
+> DEV id 4873913, tags `hf26challenge` `devchallenge` `gemma` `hacktoberfest`.
+> This file mirrors the published text; edit DEV and this file together.
 
 ---
-
-# Udhaar Book: photograph the khata, get the udhaar back
 
 *This is a submission for the [Hacktoberfest Open-Source AI Challenge Week 2: Side Hustle](https://dev.to/challenges/hacktoberfest-week2-2026-10-12)*
 
@@ -111,7 +104,7 @@ Two more things I made the design carry its weight on:
 
 An honest build log, because the flaws are more useful to read than the features.
 
-- **My machine cannot install the OCR layer.** Python 3.14 has no wheels for the usual on-device runtimes yet, so on *this* box the photo path resolves to: no local reader → model lane → and with no key either, a screen that says exactly that and hands you the sample page. The local OCR path is written, documented in `requirements-ocr.txt` and untested here. That is a gap, not a feature, and I've labelled it one in the README.
+- **My machine cannot install the OCR layer.** Python 3.14 has no wheels for the usual on-device runtimes yet, so on *this* box the photo path is: no local reader → model lane. With an AI Studio key set, an uploaded test khata page went through the Gemma lane and came back as rows in the confirm table; with no key, the screen says exactly that and hands you the sample page. The local OCR path is written, documented in `requirements-ocr.txt` and untested here. That is a gap, not a feature, and I've labelled it one in the README.
 - **No shopkeeper has used this yet.** No field test, no first user, no one has paid me ₹99. The sample notebook is a fixture I wrote; the shop name in the screenshots is a fixture shop. I would rather say that plainly than dress up a demo as a deployment.
 - **Handwriting is genuinely hard, and the honest move is to say so.** [A benchmark of four open-source OCR engines on 5,578 handwritten prescriptions](https://dev.to/kaniel_outis/how-well-can-ocr-read-doctor-handwriting-in-2026-54hn) found the best of them get *one word in three* exactly right. I read that before building and it changed the design: the app does not try to be right, it tries to be **checkable**. Every figure is one tap from the raw text the reader saw, and the ledger never accepts a row nobody confirmed.
 - **Devanagari handwriting is the weakest case** for every reader I looked at. The reminder templates are in Marathi and Hindi because the *message* is the part that must feel native, but I am not going to claim the reading is equally strong in all three scripts.
@@ -128,8 +121,6 @@ Three posts that shaped this build:
 
 **Best Use of Gemma.** Gemma 4 is the default hosted reader (`gemma-4-26b-a4b-it`, the fast MoE variant, via AI Studio's free tier on the native `generateContent` route — the OpenAI-compatible one stopped serving Gemma after 3 was retired in 2026), and Gemma 3 4B (`gemma3:4b` via Ollama) is the on-device lane. The two Gemma lanes sit at the two ends of the price/privacy trade-off — one free and remote, one free and offline — and both are selected by environment variable, not by code.
 
-<!-- If a live demo exists, add: Best Use of Render — deployed ... . If a .tech domain is used, add it here. Otherwise delete this comment. -->
-
 ## Run it yourself
 
 ```bash
@@ -141,13 +132,10 @@ uvicorn app:app --reload                            # http://127.0.0.1:8000
 
 **No key needed to judge it.** Tick *use the sample page*, press *Read this page*, and the whole flow runs on the built-in parser: 12 transactions, 8 customers, ₹2,210 outstanding, and a Marathi reminder at the end. Add one free AI Studio key in `.env` and the same flow goes through Gemma; add `OLLAMA_BASE_URL` and it never leaves the machine. `pip install -r requirements-ocr.txt` adds the on-device photo reader where wheels exist.
 
-Tests: `python tests/test_pipeline.py` (4 checks — parsing, money maths, reminders, and the no-key path) and `python tools/smoke_http.py` (20 checks against the running app, including "an uploaded photo fails honestly, with 200, not a blank page"). Neither needs a test framework installed.
+Tests: `python tests/test_pipeline.py` (5 checks — parsing, money maths, reminders, the no-key path, and the native Gemma request) and `python tools/smoke_http.py` (20 checks against the running app, including "an uploaded photo fails honestly, with 200, not a blank page"). Neither needs a test framework installed.
 
 ## Credits
 
 Built with an AI coding agent in an opencode session over one weekend. The product truth was the human's — the shopkeeper, the counter scene, the rule that names stay coded — and the visual direction was chosen from options the agent dealt and built; the agent wrote the app, the test suite, the design system and this draft, and the human approved each ship decision. FastAPI, Jinja2, SQLite, `httpx`, the self-hosted Rajdhani, Mukta and Spline Sans Mono (all SIL OFL), and the open weights of Gemma 4, Gemma 3 and Qwen 3.8. The sample notebook is synthetic and labelled as such in the repo.
 
 **AI disclosure: some_ai.**
-
-<!-- SESSION: replace with the saved agent session once it exists -->
-{% agent_session SESSION %}
