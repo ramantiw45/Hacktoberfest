@@ -1,12 +1,13 @@
 # Udhaar Book — DEV draft (Week 2: Side Hustle)
 
-> **Before publishing, fill these in** (nothing else in this file is a placeholder):
-> - `REPO` = public repo URL for the UdhaarBook code
-> - `LIVE` = live demo URL, **or** delete the Live line and keep the honest
->   "run it locally in 60 seconds" line. Do not link a demo that is not up.
-> - `SESSION` = the DevRelay agent-session slug, if we save one.
-> Screenshots assume images are served from the repo at
-> `https://raw.githubusercontent.com/<user>/<repo>/main/docs/screens/...`.
+> **Draft status:** the repo and every screenshot URL are live. Before
+> publishing:
+> - `LIVE` — add the Render URL to the TL;DR and a *Best Use of Render* line in
+>   the prize section **only once the deploy is healthy**. If it is not up, leave
+>   both out; never link a demo that is not running.
+> - `SESSION` — only if we save an agent session with DevRelay; otherwise delete
+>   the liquid tag at the end of this file.
+> Repo: https://github.com/ramantiw45/UdhaarBook (public, MIT licence).
 
 ---
 
@@ -14,7 +15,7 @@
 
 *This is a submission for the [Hacktoberfest Open-Source AI Challenge Week 2: Side Hustle](https://dev.to/challenges/hacktoberfest-week2-2026-10-12)*
 
-TL;DR — Photograph one page of a shop's handwritten credit notebook. An open-weight model reads it (a deterministic parser takes over when there is no key), the shopkeeper confirms every line, the balances follow, and each customer gets a polite WhatsApp reminder **in their own language**. The AI does the reading; the shopkeeper does the deciding. Repo: REPO | Live: LIVE
+TL;DR — Photograph one page of a shop's handwritten credit notebook. An open-weight model reads it (a deterministic parser takes over when there is no key), the shopkeeper confirms every line, the balances follow, and each customer gets a polite WhatsApp reminder **in their own language**. The AI does the reading; the shopkeeper does the deciding. Repo: https://github.com/ramantiw45/UdhaarBook
 
 ## What I built
 
@@ -40,9 +41,9 @@ The competitor is not another app — it's the pocket of khata apps that want th
 
 | | |
 |---|---|
-| ![Pick up a page — photo or sample](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/01-read.jpg) | ![Confirm every line before it is written down](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/05-confirm-before-writing.jpg) |
+| ![Pick up a page — photo or sample](https://raw.githubusercontent.com/ramantiw45/UdhaarBook/main/docs/screens/01-read.jpg) | ![Confirm every line before it is written down](https://raw.githubusercontent.com/ramantiw45/UdhaarBook/main/docs/screens/05-confirm-before-writing.jpg) |
 | **Read** — photo the page, or tick "use the sample page" and walk the whole flow with nothing installed. | **Confirm** — every line the reader found, editable, with the raw text one tap away. |
-| ![The book: every customer, given / paid / balance](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/02-the-book.jpg) | ![Who to ask: coded names, hue strips, reminder per customer](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/03-who-to-ask.jpg) |
+| ![The book: every customer, given / paid / balance](https://raw.githubusercontent.com/ramantiw45/UdhaarBook/main/docs/screens/02-the-book.jpg) | ![Who to ask: coded names, hue strips, reminder per customer](https://raw.githubusercontent.com/ramantiw45/UdhaarBook/main/docs/screens/03-who-to-ask.jpg) |
 | **The book** — the ledger: what was given, what came back, what is left, per page. | **Who to ask** — the reminder screen. Names stay coded until you tap; the message is already written. |
 
 One page of the sample notebook: 12 transactions, 8 customers, ₹3,210 given, ₹1,000 received, **₹2,210 still out**. Three of those eight have both taken credit and paid some back — that's the state a shop actually lives in, and the one a hand-written margin is worst at tracking.
@@ -64,20 +65,23 @@ One more thing, because "runs locally" is the easiest claim in a hackathon post 
 
 ```text
   one photo of a khata page
-          │
-          ├── local OCR installed?  ──►  text, on this machine (CPU only)
-          │
-          └── no OCR  ──►  open-weight lane chain
-                             gemma3:4b        Ollama, on-device, offline
-                             gemma 3 27B      AI Studio, free tier
-                             qwen 3.8         Groq, failover
-                             deterministic    no key, no network
-          │
-          ▼
+        │
+        ▼
+  local OCR (optional, CPU only) ──► raw text
+        │  no OCR installed: the photo goes straight to the lane
+        ▼
+  open-weight lane chain
+    gemma3:4b       Ollama, on-device, offline
+    gemma 3 27B     AI Studio, free tier
+    qwen 3.8        Groq, failover
+    deterministic   no key, no network — text only
+        │
+        ▼
   transaction rows ──► shopkeeper confirms ──► one SQLite file
                                                    │
-                                                   ├──► balances per customer
-                                                   └──► WhatsApp reminder
+                                     ┌─────────────┴─────────────┐
+                                     ▼                           ▼
+                            balances per customer      WhatsApp reminder
                                                         en / हिंदी / मराठी
 ```
 
@@ -101,7 +105,7 @@ Two more things I made the design carry its weight on:
 - **Nothing is signalled by colour alone.** A filled strip means credit was given; a hollow strip with a line through it means money came back. Strip the colour off and the meaning is still there — which also matters because a shopkeeper will screenshot this and print it.
 - **The reminder screen must survive a greyscale print**, so I checked it in greyscale, not just in the browser. It does.
 
-![The reminder screen with colour stripped out](https://raw.githubusercontent.com/USER/REPO/main/docs/screens/03b-who-to-ask-greyscale.jpg)
+![The reminder screen with colour stripped out](https://raw.githubusercontent.com/ramantiw45/UdhaarBook/main/docs/screens/03b-who-to-ask-greyscale.jpg)
 
 ## What I got wrong
 
@@ -129,7 +133,7 @@ Three posts that shaped this build:
 ## Run it yourself
 
 ```bash
-git clone REPO && cd UdhaarBook
+git clone https://github.com/ramantiw45/UdhaarBook.git && cd UdhaarBook
 python -m venv .venv && .venv\Scripts\activate     # or source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app:app --reload                            # http://127.0.0.1:8000
