@@ -17,8 +17,8 @@ own language** (English / हिंदी / मराठी).
   <https://github.com/ramantiw45/UdhaarBook> (`main`; `3c56eff` = finish-review
   fixes, `d3d276d` = deploy guide). Nothing heavy belongs inside the
   Hacktoberfest tree.
-- **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 4 31B on
-  AI Studio's free tier as the default reader, Gemma 3 4B via Ollama as the
+- **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 4 26B A4B
+  on AI Studio's free tier as the default reader, Gemma 3 4B via Ollama as the
   on-device lane, both selected by env var.
 - **Second target, needs a call:** Best Use of Render. The `render.yaml` blueprint
   is deploy-ready and `UdhaarBook/docs/deploy.md` is the step-by-step; it needs
@@ -37,7 +37,7 @@ The business case (₹99/month vs. ~₹650/month recovered leakage) is written u
 
 | Layer | What | Openness |
 |---|---|---|
-| Reading (default) | `gemma-4-31b-it` via Google AI Studio free tier | open weights |
+| Reading (default) | `gemma-4-26b-a4b-it` via Google AI Studio free tier | open weights |
 | Reading (offline) | `gemma3:4b` via Ollama | open weights, on-device |
 | Reading (failover) | `qwen/qwen3.8-27b` via Groq free tier | open weights |
 | Reading (floor) | built-in deterministic parser | no key, no network |
@@ -119,7 +119,11 @@ The AI Studio lane now carries a small native-protocol adapter
 `systemInstruction`, inline base64 images become `inline_data`, and the reply is
 read from `candidates[0].content.parts`. Ollama and Groq keep the OpenAI shape.
 The old `/openai` base URL in existing `.env` files is normalised
-automatically, and the default model is `gemma-4-31b-it`.
+automatically, and the default model is `gemma-4-26b-a4b-it` — the fast MoE
+variant; `gemma-4-31b-it` is one env var away for heavier pages. The 31B dense
+model was the first pick, but it has a reported 500-error rate on the free tier;
+the 26B-A4B is faster and steadier under a judge's hand, and a single retry on a
+5xx covers the rest (429 is a quota answer, so it is never retried).
 
 Proof: `tests/test_pipeline.py` is now **5 checks** — the new one asserts the
 native body, the `/openai` normalisation and the Gemma 4 default —
