@@ -1,6 +1,8 @@
 # Week 2 — Side Hustle (Oct 12 → Oct 18, 11:59pm PDT)
 
-**Submission status: draft written, repo committed locally, not yet published.**
+**Submission status: draft written, repo public at
+<https://github.com/ramantiw45/UdhaarBook>, deploy guide committed, not yet
+deployed or published.**
 Deadline in IST: Mon Oct 19, 12:29 PM.
 
 ## What was built
@@ -11,14 +13,16 @@ them, the balances follow, and each customer gets a WhatsApp reminder **in their
 own language** (English / हिंदी / मराठी).
 
 - **Code lives outside this folder**, by design:
-  `C:\Users\Raman Tiwari\MyDevelopments\UdhaarBook` (its own git repo, commit
-  `3c56eff` after the finish-review fixes). Nothing heavy belongs inside the
+  `C:\Users\Raman Tiwari\MyDevelopments\UdhaarBook`, its own repo, now public at
+  <https://github.com/ramantiw45/UdhaarBook> (`main`; `3c56eff` = finish-review
+  fixes, `d3d276d` = deploy guide). Nothing heavy belongs inside the
   Hacktoberfest tree.
 - **Prize target:** Best Use of Gemma ($200, featured category) — Gemma 3 27B on
   AI Studio's free tier as the default reader, Gemma 3 4B via Ollama as the
   on-device lane, both selected by env var.
-- **Second target, needs a call:** Best Use of Render (a `render.yaml` blueprint
-  is committed and deploy-ready; see *Open decisions*).
+- **Second target, needs a call:** Best Use of Render. The `render.yaml` blueprint
+  is deploy-ready and `UdhaarBook/docs/deploy.md` is the step-by-step; it needs
+  the Render account (see *Open decisions*).
 
 ## Why this qualifies for the theme
 
@@ -47,8 +51,8 @@ the ledger.
 ## Submission artifacts
 
 - `draft.md` — the DEV post (title, screenshots, why-open paragraph, honest
-  limits, prize categories). Placeholders `REPO` / `LIVE` / `SESSION` must be
-  filled before publishing.
+  limits, prize categories). `REPO` and all five screenshot URLs are filled with
+  the public repo; `LIVE` waits on the deploy, `SESSION` is optional.
 - Screenshots: `UdhaarBook/docs/screens/*.jpg` (read, confirm, book, ask,
   ask-greyscale, phone).
 - Design record: `UdhaarBook/PRODUCT.md`, `.impeccable/surface-brief-reminders.md`,
@@ -68,7 +72,9 @@ the ledger.
   an honest answer (nothing here can read it, use the sample) rather than a
   crash or a blank table. The text path, parsing, ledger and reminders are
   exercised end to end.
-- **No live demo URL yet** (Week 1 ran on Render; this one is not deployed).
+- **No live demo URL yet.** Deploy instructions are committed
+  (`UdhaarBook/docs/deploy.md`); the Render account and the AI Studio key are the
+  user's to create. Until then the post links the repo only — no dead demo link.
 
 ## Revision 2 — after the finish review
 
@@ -98,14 +104,17 @@ a white-ground static-scan contrast false positive, and the em-dash advisory.
 
 ## Open decisions (need the user)
 
-1. Push `UdhaarBook` to GitHub as a public repo (`ramantiw45/UdhaarBook`?), then
-   fill `REPO` in `draft.md` — and the screenshot URLs, which assume
-   `raw.githubusercontent.com/<user>/<repo>/main/docs/screens/...`.
-2. Deploy to Render from `render.yaml` (needs the account dashboard) — that is
-   both the `LIVE` line and the Best Use of Render entry. Set `AI_STUDIO_API_KEY`
-   in the dashboard to route the demo through Gemma; without it the demo still
-   works on the parser.
-3. Save the agent session with DevRelay, which yields `SESSION` for the post.
+1. ~~Push `UdhaarBook` as a public repo~~ — **done**: public at
+   <https://github.com/ramantiw45/UdhaarBook>, `main` is the default branch, and
+   every screenshot URL in `draft.md` resolves from it.
+2. **Deploy to Render** from the blueprint, following
+   `UdhaarBook/docs/deploy.md`: create the free AI Studio key, paste it as
+   `AI_STUDIO_API_KEY`, then `GET /healthz` should list
+   `["ai-studio","deterministic"]`. That deploy is both the `LIVE` line and the
+   Best Use of Render entry. Without a key the demo still works on the parser.
+3. **Publish the DEV post** (`draft.md`) as a draft first; fill `LIVE` only if the
+   deploy is healthy. Required tag `#hf26challenge`.
+4. Optional: save the agent session with DevRelay for `SESSION`.
 
 ## Reminders for publishing
 
@@ -113,4 +122,5 @@ a white-ground static-scan contrast false positive, and the em-dash advisory.
   (`hf26challenge`, `devchallenge`, `gemma`, `hacktoberfest` fits).
 - Stage on DEV as a **draft first**, hand over the `edit_url`, publish only on an
   explicit yes. AI disclosure stays `some_ai`.
-- Repo must be public before publishing, with LICENSE (MIT, already committed).
+- Repo is public with LICENSE (MIT). Do not link the demo until `/healthz` is
+  green.
