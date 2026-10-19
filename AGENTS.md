@@ -12,8 +12,8 @@
 Trigger: any task under `week-*` → load `hacktoberfest-rules` + `hacktoberfest-playbook`; stack choice → +`hacktoberfest-tools`; drafting post → +`hacktoberfest-submission`; how-it-works Q → +`hacktoberfest-faq`.
 
 ## Layout
-- `week-00-weekend/` (Oct 02-05, ended) · `week-01-touch-grass/` (LIVE to Oct 11 11:59pm PDT, theme: get people outside) · `week-02/` `week-03/` `week-04/` (upcoming).
-- Each week folder: code + README + DEV draft (`draft.md`) + field-test notes.
+- `week-00-weekend/` (Oct 02-05, ended) · `week-01-touch-grass/` (Oct 05-11, ended) · `week-02/` (Oct 12-18, ended — *Udhaar Book* published) · `week-03/` (Oct 19-25, open, details pending) · `week-04/` (Oct 26-31, upcoming).
+- Each week folder: README + DEV draft (`draft.md`) + field-test notes. Week 2's code lives in its own public repo, `UdhaarBook`.
 
 ## Standing rules
 - Open-source AI must be core (open-weight model and/or OSS harness and/or local inference) + post explains why-open.

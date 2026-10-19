@@ -48,22 +48,24 @@ The business case (₹99/month vs. ~₹650/month recovered leakage) is written u
 | OCR (optional) | PP-OCRv5 / PaddleOCR / Tesseract via `requirements-ocr.txt` | open source, CPU only |
 | Store | one SQLite file | portable, deletable |
 
-Swapping lanes is one env var: every lane speaks chat-completions. The model is
-allowed to soften wording and **never** to produce a figure — amounts come from
-the ledger.
+Swapping lanes is one env var: Ollama and Groq speak chat-completions, and the
+AI Studio Gemma lane carries a small native `generateContent` adapter. The model
+is allowed to soften wording and **never** to produce a figure — amounts come
+from the ledger.
 
 ## Submission artifacts
 
-- `draft.md` — the DEV post (title, screenshots, why-open paragraph, honest
-  limits, prize categories). `REPO` and all five screenshot URLs are filled with
-  the public repo; `LIVE` waits on the deploy, `SESSION` is optional.
+- `draft.md` — the published DEV post, mirrored from
+  <https://dev.to/ramantiw45/udhaar-book-photograph-the-khata-get-the-udhaar-back-5bej>
+  (id 4873913). The repo and all five screenshot URLs resolve from the public
+  repo; no live demo is linked and the optional session tag was removed.
 - Screenshots: `UdhaarBook/docs/screens/*.jpg` (read, confirm, book, ask,
   ask-greyscale, phone).
 - Design record: `UdhaarBook/PRODUCT.md`, `.impeccable/surface-brief-reminders.md`,
   `DESIGN.md` + `.impeccable/design.json` (the written system, reconciled to the
   shipped build), and `.impeccable/review/` (captures + detector findings +
   review packet, revision 2).
-- Tests: `python tests/test_pipeline.py` (4 pipeline tests) and
+- Tests: `python tests/test_pipeline.py` (5 pipeline tests) and
   `python tools/smoke_http.py` (20 HTTP checks, including "a photo upload fails
   honestly, not with a blank page"). Neither needs a test framework installed.
 
@@ -71,11 +73,13 @@ the ledger.
 
 - **No field test and no first user.** `samples/*` are synthetic fixtures; the
   shop in the screenshots (`Suresh Kirana`) is a fixture shop.
-- **The photo path is unproven on this machine.** Python 3.14 has no wheels for
-  the on-device OCR runtimes, and no model key is set, so an uploaded photo gets
-  an honest answer (nothing here can read it, use the sample) rather than a
-  crash or a blank table. The text path, parsing, ledger and reminders are
-  exercised end to end.
+- **The photo path has one test behind it, not a field test.** Python 3.14 has no
+  wheels for the on-device OCR runtimes, so the local reader stays untested
+  here; with an AI Studio key set, an uploaded test khata page read through
+  Gemma and landed in the confirm table. Without a key an uploaded photo gets an
+  honest answer (nothing here can read it, use the sample) rather than a crash
+  or a blank table. No real shop's page, and no smudged or angled photo, has
+  been tried.
 - **No live demo URL yet.** Deploy instructions are committed
   (`UdhaarBook/docs/deploy.md`); the Render account and the AI Studio key are the
   user's to create. Until then the post links the repo only — no dead demo link.
