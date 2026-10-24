@@ -1,8 +1,9 @@
 # Sloth Ledger: the model has an opinion, the ledger has the numbers
 
-**TL;DR** — Describe a chore in plain English. An open-weight model decides whether to automate it, hand it to a human, or ignore it forever. When an automation actually runs, the reclaimed minutes go into a Tiger Cloud hypertable, and every figure on screen prints the arithmetic that produced it. Runs locally with `python app.py`; no build step, no framework, no key required.
+**TL;DR** — Describe a chore in plain English. An open-weight model decides whether to automate it, hand it to a human, or ignore it forever. When an automation actually runs, the reclaimed minutes go into a Tiger Cloud hypertable, and every figure on screen prints the arithmetic that produced it. Runs locally with `python app.py`; also deployed on Render's free plan, where the web process is disposable and the ledger is not.
 
 Repo: <https://github.com/ramantiw45/SlothLedger>
+Live demo: <https://sloth-ledger.onrender.com>
 
 <!-- image: desktop -->
 ![Sloth Ledger on a laptop: a totals card reading 15m reclaimed this week, a new-entry card, and a tray of index-style cards with Automate, Delegate and Ignore Forever stamps, each showing its evidence line.](https://raw.githubusercontent.com/ramantiw45/SlothLedger/main/docs/desktop.png)
@@ -101,11 +102,22 @@ The top-automations panel does not scan that table. It reads `ledger.reclaimed_d
 
 None of that is visible in a screenshot, which is the point: it is the difference between a demo that survives a year of entries and one that gets slower every week.
 
-## Three things that broke, written down
+## Deployed on Render, including the parts that sleep
+
+The public demo is a Render web service built from the repo's `render.yaml`: Python 3.12, free plan, Singapore region, health check on `/healthz`, and a build step that installs exactly one package. The two secrets are `sync: false` in the blueprint and pasted into the dashboard once, so neither the Tiger connection string nor the model key ever enters git.
+
+![Sloth Ledger running on Render: the tray with a 15m week and 43m all time, and the header reading public demo · shared ledger.](https://raw.githubusercontent.com/ramantiw45/SlothLedger/main/docs/live.png)
+
+Render's free plan sleeps after fifteen minutes without traffic, and the first request afterwards takes a few seconds. That constraint is why the split matters: the web process is disposable, the ledger is not. I can redeploy the service and every reclaimed minute is still there when it wakes, because the minutes live in the hypertable, not on the instance's disk.
+
+Because every visitor shares one ledger, the deployed build sets `DEMO_MODE=1`: writes are rate-limited to eight per visitor per ten minutes, and the header says `public demo · shared ledger`. The page is honest about being a demo instead of pretending the seeded chores are yours.
+
+## Four things that broke, written down
 
 1. **Groq returned 403 with no useful body.** Python's default `User-Agent` was being rejected by the WAF in front of the API. Identifying the client (`sloth-ledger/0.1`) fixed it. This is the kind of bug that looks like a bad key for an hour.
 2. **`llama-3.3-70b-versatile` was gone.** The model name from every tutorial returned 404. Listing `/models` for the key showed the current catalogue and I moved to `qwen/qwen3.8-27b`. Pinning a model name in a tutorial is a gift with an expiry date.
 3. **Tiger returns `numeric` as `Decimal` and timestamps as `datetime`.** `json.dumps` refused both. The fix belongs at the store boundary, not in every route: one normalising step in `_rows`.
+4. **The first deployed request used the rules floor and said nothing.** Falling back quietly is the right behaviour for a person typing a chore and the wrong behaviour for me. I added one stderr line naming the lane and the HTTP status; the next build called the model. The cause of that first miss was never proven, which is the argument for logging a fallback rather than trusting it.
 
 ## Related work
 
@@ -122,6 +134,8 @@ python app.py                       # http://127.0.0.1:8787
 ```
 
 No install step. Without a `.env` you get the rules floor and a SQLite file. To use the same lanes as the demo, copy `.env.example` to `.env` and set `MODEL_BASE_URL`, `MODEL_API_KEY`, `MODEL_NAME`, and optionally `DATABASE_URL` for Tiger Cloud.
+
+The hosted demo is this same code with `HOST=0.0.0.0` and `DEMO_MODE=1`; `render.yaml` and `docs/deploy.md` are in the repo. It sleeps on Render's free plan, so give the first request a few seconds.
 
 The checks I ran before writing this:
 

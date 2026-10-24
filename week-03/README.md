@@ -1,8 +1,9 @@
 # Week 3 — Slow and Steady (Oct 19 → Oct 25, 11:59pm PDT)
 
-**Submission status: DRAFTED — DEV draft id 4911464, not yet published.** Post
-draft is `draft.md`; the staged article is
+**Submission status: DRAFTED + DEPLOYED — DEV draft id 4911464, not yet
+published.** Post draft is `draft.md`; the staged article is
 <https://dev.to/ramantiw45/sloth-ledger-the-model-has-an-opinion-the-ledger-has-the-numbers-36nf-temp-slug-9697672/edit>.
+Live demo: <https://sloth-ledger.onrender.com>.
 It publishes only on an explicit yes.
 
 Deadline in IST: **Sun Oct 25, 12:29 PM** (`2026-10-25T06:59:00Z`).
@@ -18,9 +19,10 @@ did this actually save me?*
 - **Code lives outside this folder**, by design:
   `C:\Users\Raman Tiwari\MyDevelopments\SlothLedger`, public at
   <https://github.com/ramantiw45/SlothLedger> (`main`, MIT).
-- **Prize target:** Best Use of Tiger Data ($100 partner category) — hypertable
-  for reclaimed minutes, continuous aggregate for the panel that reads them,
-  compression policy, and a least-privilege `sloth_app` role.
+- **Prize targets:** Best Use of Tiger Data ($100) and Best Use of Render ($200).
+  Tiger: hypertable for reclaimed minutes, continuous aggregate for the panel
+  that reads them, compression policy, least-privilege `sloth_app` role.
+  Render: free web service built from `render.yaml`, deployed and verified live.
 - Tags planned: `devchallenge`, `hf26challenge`, `tigerdata`, `opensource`.
 
 ## Why this qualifies for the theme
@@ -55,27 +57,38 @@ hosted open-weight lane, and the post says so.
 - **Synthetic demo corpus.** The eight chores in `tools/seed_demo.py` are a
   labelled fictional freelancer week, not the user's measurements.
 - **No multi-user, no auth, no edit/delete.** Single-user local tool.
-- **No public deployment.** Runs from `python app.py` on localhost; the post
-  links the repo and does not pretend there is a live demo.
+- **Public demo is shared and disposable.** Render free plan sleeps after 15
+  minutes (first request takes a few seconds); writes are capped at 8 per
+  visitor per 10 minutes and the page says `public demo · shared ledger`.
+  Ledger data survives restarts because it lives in Tiger, not on Render.
 - **Free-tier API.** The Groq lane may rate-limit under a judge's hand; the rules
   floor answers instead, with the lane name printed on every card.
 
 ## Artifacts
 
 - `draft.md` — the DEV post draft (not yet published).
-- Repo: `docs/desktop.png`, `docs/mobile.png` — captures from the shipping build,
-  served from the public repo so the post's images resolve.
+- Repo: `docs/desktop.png`, `docs/mobile.png`, `docs/live.png` — captures from
+  the shipping build and the Render deployment, served from the public repo so
+  the post's images resolve.
+- Deploy: `render.yaml` (blueprint, `sync: false` secrets, health check),
+  `docs/deploy.md` (step-by-step), `requirements.txt` (only `pg8000`).
+  Render service `srv-dbee9h0n74is73eev8hg`, region Singapore, free plan.
 - Design record: `SlothLedger/PRODUCT.md`, `DESIGN.md`,
   `.impeccable/surface-brief-ledger.md`, `.impeccable/review/` (captures +
   detector output).
 - Tests: `python tests/test_ledger.py` → 11 tests OK;
   `python tools/smoke_http.py` → 15 checks passed against a live server on the
   Tiger lane.
+- Live verification: `/healthz` → `store=postgres`,
+  `lanes=[rules, api:qwen/qwen3.8-27b]`; live POST judged by the model lane;
+  test rows removed afterwards (8 chores / 4 runs / 43m remain).
 
 ## Publish checklist
 
-- [x] In contest window (drafted Oct 25, before 12:29 PM IST)
+- [x] In contest window (drafted before the Sun Oct 25 12:29 PM IST deadline)
 - [x] Repo public, MIT, README + screenshots
 - [x] Tags verified to exist (`tigerdata` is live on Week 3 entries)
-- [ ] DEV draft created, then published on explicit yes
+- [x] Deployed on Render free plan; `/healthz` and a live write verified
+- [x] DEV draft created (id 4911464) with live URL, Render section, live image
+- [ ] Publish on explicit yes
 - [ ] Add the published article id + URL here after publishing
