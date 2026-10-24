@@ -1,10 +1,11 @@
 # Week 3 — Slow and Steady (Oct 19 → Oct 25, 11:59pm PDT)
 
-**Submission status: DRAFTED + DEPLOYED — DEV draft id 4911464, not yet
-published.** Post draft is `draft.md`; the staged article is
-<https://dev.to/ramantiw45/sloth-ledger-the-model-has-an-opinion-the-ledger-has-the-numbers-36nf-temp-slug-9697672/edit>.
-Live demo: <https://sloth-ledger.onrender.com>.
-It publishes only on an explicit yes.
+**Submission status: PUBLISHED 24 Oct 2026, 22:48 IST** — article id 4911464,
+<https://dev.to/ramantiw45/sloth-ledger-the-model-has-an-opinion-the-ledger-has-the-numbers-22gc>
+— with tags `devchallenge` `hf26challenge` `tigerdata` `opensource`, and it
+appears in the `hf26challenge` feed. Live demo:
+<https://sloth-ledger.onrender.com> (Render free plan, backed by Tiger Cloud).
+Repo public at <https://github.com/ramantiw45/SlothLedger>.
 
 Deadline in IST: **Sun Oct 25, 12:29 PM** (`2026-10-25T06:59:00Z`).
 
@@ -66,7 +67,9 @@ hosted open-weight lane, and the post says so.
 
 ## Artifacts
 
-- `draft.md` — the DEV post draft (not yet published).
+- `draft.md` — the published DEV post, mirrored from
+  <https://dev.to/ramantiw45/sloth-ledger-the-model-has-an-opinion-the-ledger-has-the-numbers-22gc>
+  (id 4911464).
 - Repo: `docs/desktop.png`, `docs/mobile.png`, `docs/live.png` — captures from
   the shipping build and the Render deployment, served from the public repo so
   the post's images resolve.
@@ -85,10 +88,16 @@ hosted open-weight lane, and the post says so.
 
 ## Publish checklist
 
-- [x] In contest window (drafted before the Sun Oct 25 12:29 PM IST deadline)
+- [x] In contest window (published 24 Oct, before the Sun Oct 25 12:29 PM IST
+      deadline)
 - [x] Repo public, MIT, README + screenshots
 - [x] Tags verified to exist (`tigerdata` is live on Week 3 entries)
 - [x] Deployed on Render free plan; `/healthz` and a live write verified
-- [x] DEV draft created (id 4911464) with live URL, Render section, live image
-- [ ] Publish on explicit yes
-- [ ] Add the published article id + URL here after publishing
+- [x] DEV post created and published (id 4911464) with live URL, Render
+      section, live image
+- [x] Published 24 Oct 2026, 22:48 IST — id 4911464, appears in the
+      `hf26challenge` feed
+- [x] Published article id + URL recorded above
+
+**Submission complete.** One entry for Week 3; winners are announced the week of
+Oct 26. No further action is required for the entry itself.
