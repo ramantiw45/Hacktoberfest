@@ -50,6 +50,8 @@ The demo ledger, after eight chore entries and four automation runs:
 | Chores judged | **8** |
 | Automations run | **4** |
 
+The live demo is a shared ledger: its totals move as visitors use it. The table and the screenshots are the snapshot from the build; the arithmetic printed on each card is the part that does not move.
+
 That *still on you* line is the one I care about. It is the manual time in chores the tool declined to automate, and it is allowed to grow. A ledger where every number only goes up is a sales pitch, not a record.
 
 Fifteen minutes in a week is not a headline. It is what an honest first week looks like when you count setup time against savings and refuse to round up.

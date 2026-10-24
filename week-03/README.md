@@ -62,6 +62,8 @@ hosted open-weight lane, and the post says so.
   minutes (first request takes a few seconds); writes are capped at 8 per
   visitor per 10 minutes and the page says `public demo · shared ledger`.
   Ledger data survives restarts because it lives in Tiger, not on Render.
+  Totals on the live demo move as visitors use it; the post's 8 chores /
+  4 runs / 43m table and its screenshots are the snapshot taken at publication.
 - **Free-tier API.** The Groq lane may rate-limit under a judge's hand; the rules
   floor answers instead, with the lane name printed on every card.
 
